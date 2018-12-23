@@ -1,0 +1,23 @@
+type,title
+D,Driving trailer
+N,Non-control motor
+T,Trailer
+OD,Driving trailer
+ON,Non-control motor
+ONL,Non-control motor + lavatory
+C,Control motor
+DCF,Control motor
+DDC,Control motor
+DTF,Trailer
+DTC,Trailer
+DCM,Control motor
+DCT,Trailer
+DIM,Control motor
+DIT,Trailer
+DJM,Control motor
+DKM,Control motor
+DKT,Trailer
+TE,Control motor + toilet
+LE,Control motor + luggage area
+HM,Control motor
+HMT,Control motor + toilet

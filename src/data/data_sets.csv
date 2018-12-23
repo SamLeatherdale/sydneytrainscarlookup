@@ -1,0 +1,13 @@
+set,name,wiki,tfnsw
+A,Waratah (A series),Sydney_Trains_A_set,waratah-trains
+B,Waratah (B series),Sydney_Trains_A_set,waratah-trains
+M,Millenium,Sydney_Trains_M_set,millennium-trains
+H,OSCAR,NSW_TrainLink_H_set,oscar-trains
+T,Tangara,Sydney_Trains_T_set,tangara-trains
+G,Tangara,Sydney_Trains_T_set,tangara-trains
+C,,Sydney_Trains_C_set,c-set-trains
+K,,Sydney_Trains_K_set,k-set-trains
+S,,Sydney_Trains_S_set,s-set-trains
+V,,NSW_TrainLink_V_set,v-set-trains
+Endeavour,,New_South_Wales_Endeavour_railcar,endeavour-trains
+Hunter,,New_South_Wales_Hunter_railcar,hunter-trains
