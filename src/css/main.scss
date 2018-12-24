@@ -1,0 +1,135 @@
+@mixin media($max_width) {
+    @media screen and (max-width: $max_width) {
+        @content;
+    }
+}
+@mixin link-all {
+    &, &:link, &:visited, &:hover, &:active {
+        @content;
+    }
+}
+
+$mobile_port: 599px;
+
+//General styles
+html, body {
+    height: 100%;
+}
+body {
+    display: flex;
+    flex-direction: column;
+
+    .wrap {
+        flex: 1 0 auto;
+    }
+    #footer {
+        flex-shrink: 0;
+
+        text-align: center;
+        color: white;
+        background-color: #555;
+
+        p {
+            margin: 8px auto;
+        }
+        a {
+            @include link-all {
+                color: rgb(38, 162, 221);
+            }
+        }
+    }
+}
+
+h1 {
+    font-size: 2em;
+    text-align: center;
+    color: #f18500;
+    margin: 2rem 0;
+}
+
+h4 {
+    color: #b1b1b1;
+}
+
+a {
+    @include link-all {
+        text-decoration: none;
+    }
+}
+
+.wrap {
+    max-width: 600px;
+    margin: 0 auto 32px;
+    padding: 1px 10px;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+
+    label {
+        margin-bottom: 0;
+        width: 130px;
+    }
+}
+
+input[type='submit'] {
+  display: block;
+  width: 100%;
+  margin: auto;
+}
+
+.btn-container {
+    display: flex;
+    flex-flow: wrap;
+
+    @include media($mobile_port) {
+        display: block;
+    }
+
+    .btn {
+        margin-left: 8px;
+
+        @include media($mobile_port) {
+            margin-left: 0;
+        }
+
+        &:first-child {
+            margin-left: 0;
+        }
+    }
+
+    &[data-cols='2'] {
+        .btn {
+            width: 49%;
+            margin-left: 2%;
+    
+            @include media($mobile_port) {
+                width: 100%;
+                margin-bottom: 5px;
+                margin-left: 0;
+            }
+    
+            &:first-child {
+                margin-left: 0;
+            }
+        }
+    }
+}
+
+//Specific styles
+#suggestionBtnContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 88px);
+    gap: 10px;
+
+    .btn {
+        margin: 0;
+        padding: 8px 4px;
+    }
+}
+
+#carImg {
+    display: block;
+    max-width: 100%;
+}

@@ -3,8 +3,9 @@ const tfnswData: TfNSWData = require('./data/data.json');
 
 const WIKIPEDIA_URL = "//en.wikipedia.org/wiki/";
 const TFNSW_ARTICLE_URL = "//transportnsw.info/travel-info/ways-to-get-around/train/fleet-facilities/";
-const TFNSW_IMAGE_URL = "//transportnsw.info/sites/default/files/styles/wysiwyg_large_1140/public/image/2018/04/";
-const idRegex = /^([A-Z]{0,3})?([0-9]{4})$/;
+//const TFNSW_IMAGE_URL = "//transportnsw.info/sites/default/files/styles/wysiwyg_large_1140/public/image/2018/04/";
+const TFNSW_IMAGE_URL = "/images/";
+const idRegex = /^([A-Z]{0,3})?([0-9]{4})?$/;
 
 class SearchResult {
     public queryLetter: string = "";
@@ -89,6 +90,7 @@ export default class App extends Component<{}, AppState> {
         //Bind event handers so `this` refers to this class, not element that event fired on
         this.onChangeCarId = this.onChangeCarId.bind(this);
         this.onFormSubmit = this.onFormSubmit.bind(this);
+        this.onFormReset = this.onFormReset.bind(this);
         this.onClickSuggestion = this.onClickSuggestion.bind(this);
     }
 
@@ -97,14 +99,22 @@ export default class App extends Component<{}, AppState> {
 
     onChangeCarId(e: ChangeEvent) {
         let target = e.target as HTMLInputElement;
+        let value = target.value.replace(/[^A-Z\d]/i, '').toUpperCase();
         this.setState({
-            carId: target.value
+            carId: value
         });
+        this.performSearch(value);
     }
 
     onFormSubmit(e: FormEvent) {
         e.preventDefault();
-        this.performSearch(this.state.carId);
+    }
+
+    onFormReset(e: FormEvent) {
+        this.setState({
+            carId: ""
+        });
+        this.performSearch("");
     }
 
     onClickSuggestion(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
@@ -122,10 +132,14 @@ export default class App extends Component<{}, AppState> {
      */
     performSearch(id: string) {
         const partialState: any = {};
-        const searchResult = this.searchId(id);
-        console.log(searchResult);
+        let searchResult = this.searchId(id);
 
-        partialState.showError = !searchResult;
+        partialState.showError = !searchResult && id !== "";
+        if (!searchResult) {
+            //If the search failed, populate the result with an empty result
+            searchResult = new SearchResult();
+        }
+
         partialState.searchResult = searchResult;
 
         this.setState(partialState);
@@ -136,13 +150,13 @@ export default class App extends Component<{}, AppState> {
      * @param {string} id 
      * @returns {SearchResult} Returns search results, or null if an error occurred.
      */
-    searchId(id: string) {
+    searchId(id: string) : SearchResult {
         const match = id.match(idRegex);
         const result = new SearchResult();
 
         if (match === null) {
             //showAlert("Oops! That ID doesn't follow a valid format (eg. D1023)");
-            return false;
+            return null;
         }
 
         result.queryLetter = match[1];
@@ -161,17 +175,17 @@ export default class App extends Component<{}, AppState> {
                     break;
                 }
             }
-        } else {
-            //Look through all letters
-            for (let key of Object.keys(this.data.ranges)) {
-                let carLetterData = this.data.ranges[key];
-                for (let range of carLetterData) {
-                    if (checkIdInRange(result.queryNumber, range)) {
-                        result.fuzzy.push(range);
-                        break;
-                    }
-                }
+        }
+        
+        if (!result.exact) {
+            let fuzzy : Range[] = [];
+            if (result.queryNumber) {
+                fuzzy = this.getFuzzyByNumber(result.queryNumber)
             }
+            if (result.queryLetter) {
+                fuzzy = fuzzy.concat(this.getFuzzyByLetter(result.queryLetter));
+            }   
+            result.fuzzy = fuzzy;
         }
 
         if (!result.exact && result.fuzzy.length === 0) {
@@ -206,26 +220,99 @@ export default class App extends Component<{}, AppState> {
         return result;
     }
 
+    /**
+     * Look through all letters to find cars matching the given number.
+     * @param number 
+     */
+    getFuzzyByNumber(number: number) : Range[] {
+        const fuzzy : Range[] = [];
+
+        for (let key of Object.keys(this.data.ranges)) {
+            let carLetterData = this.data.ranges[key];
+            for (let range of carLetterData) {
+                if (checkIdInRange(number, range)) {
+                    fuzzy.push(range);
+                    break;
+                }
+            }
+        }
+        return fuzzy;
+    }
+
+    getFuzzyByLetter(letter: string) : Range[] {
+        const fuzzy : Range[] = [];
+        const sets = {};
+        const letters = {};
+
+        for (let key of shuffle(Object.keys(this.data.ranges))) {
+            if (key.indexOf(letter) !== -1) {
+                let carLetterData = this.data.ranges[key];
+                for (let range of carLetterData) {
+                    if (!sets[range.set] || !letters[key]) {
+                        fuzzy.push(range);
+                        sets[range.set] = true;
+                        letters[key] = true;
+                    }
+                }
+            }
+        }
+
+        return fuzzy;
+    }
+
+    /**
+     * Generates some random suggestions to prompt the user.
+     */
+    generateSuggestions() : Range[] {
+        const results : Range[] = [];
+        const sets = {};
+
+        for (let key of shuffle(Object.keys(this.data.ranges))) {
+            let carLetterData = this.data.ranges[key];
+            for (let range of carLetterData) {
+                //Make sure this set hasn't already been added
+                if (!sets[range.set]) {
+                    results.push(range);
+                    sets[range.set] = true;
+                }
+            }
+        }
+
+        return results.slice(0, 12);
+    }
+
     render() {
         const exact = this.state.searchResult.exact;
-        const errorStyle = this.state.showError ? {} : {display: "none"};
-        const noExactWarningStyle = !this.state.searchResult.exact && this.state.searchResult.fuzzy.length > 0 ? {} : {display: "none"};
+        const isRandomSuggestion = this.state.carId == "";
+        const suggestionButtons = (isRandomSuggestion) 
+            ? this.generateSuggestions() : this.state.searchResult.fuzzy;
 
         return ( 
         <div>
-            <Form value={this.state.carId} onChangeInput={this.onChangeCarId} onSubmit={this.onFormSubmit} />
-            <div className="alert alert-danger" role="alert" style={errorStyle}>
-                Sorry, we couldn't find any cars with that ID.
-            </div>
-            <div className="alert alert-warning" role="alert" style={noExactWarningStyle}>
-                We couldn't find an exact match for that ID, here are some suggestions.
-            </div>
+            <Form value={this.state.carId} onChangeInput={this.onChangeCarId} onSubmit={this.onFormSubmit} onReset={this.onFormReset} />
 
-            <div className="btn-container">
-            {this.state.searchResult 
-                && this.state.searchResult.fuzzy.map((range) => {
-                    let carID = range.letter + this.state.searchResult.queryNumber;
-                    return <button key={range.letter} type="button" className="btn btn-info" onClick={this.onClickSuggestion} data-carid={carID}>{carID}</button>
+            {this.state.showError && 
+            (<div className="alert alert-danger" role="alert">
+                Sorry, we couldn't find any cars with that ID.
+            </div>)}
+
+            {!isRandomSuggestion && !this.state.searchResult.exact && this.state.searchResult.fuzzy.length > 0 &&
+            (<div className="alert alert-warning" role="alert">
+                We couldn't find an exact match for that ID, here are some suggestions.
+            </div>)}
+
+            {isRandomSuggestion && 
+            (<div className="alert alert-primary" role="alert">
+                Try some of these suggestions if you're not on a train right now.
+            </div>)}
+
+            <div id="suggestionBtnContainer">
+            {suggestionButtons.map((range) => {
+                    let carID = range.letter + 
+                        (!isRandomSuggestion && this.state.searchResult.queryNumber
+                            ? this.state.searchResult.queryNumber 
+                            : getRandomInt(range.start, range.end + 1));
+                    return <button key={carID} type="button" className="btn btn-info" onClick={this.onClickSuggestion} data-carid={carID}>{carID}</button>
                 })}
             </div>
 
@@ -243,10 +330,10 @@ export default class App extends Component<{}, AppState> {
                 <img id="carImg" className="mb-2" 
                     src={TFNSW_IMAGE_URL + this.state.searchResult.car.img} />
 
-                <div className="btn-container">
-                    <a className="btn btn-info" id="car_wiki" target="_blank"
+                <div className="btn-container" data-cols='2'>
+                    <a className="btn btn-info" id="carWiki" target="_blank"
                         href={WIKIPEDIA_URL + this.data.sets[exact.set].wiki}>View more on Wikipedia</a>
-                    <a className="btn btn-info" id="car_tfnsw" target="_blank"
+                    <a className="btn btn-info" id="carTfnsw" target="_blank"
                         href={TFNSW_ARTICLE_URL + this.data.sets[exact.set].tfnsw + this.state.searchResult.car.href}>
                         View more on Sydney Trains</a>
                 </div>
@@ -259,17 +346,23 @@ export default class App extends Component<{}, AppState> {
 class Form extends Component<{
     value: any, 
     onSubmit: FormEventHandler, 
+    onReset: FormEventHandler,
     onChangeInput: ChangeEventHandler
 }, {}> {
     render() {
         return (
-        <form className="mb-4" onSubmit={this.props.onSubmit}>
-            <div className="form-group">
-                <label htmlFor="carId">Car Number: </label>
+        <form className="mb-4" onSubmit={this.props.onSubmit} onReset={this.props.onReset}>
+            <div className="input-group mb-2">
+                <div className="input-group-prepend">
+                    <span className="input-group-text">Car Number: </span>
+                </div>
                 <input className="form-control" id="carId" type="text" 
                     value={this.props.value} onChange={this.props.onChangeInput} required />
+                {this.props.value !== "" && 
+                (<div className="input-group-append">
+                    <input className="btn btn-danger" type="reset" value="Clear" />
+                </div>)}
             </div>
-            <input className="btn btn-primary" type="submit" value="Search" />
         </form>);
     }
 }
@@ -277,12 +370,50 @@ class Form extends Component<{
 /**
  * Checks whether a given car number is within the given range.
  */
-function checkIdInRange(id: number, range: Range) {
+function checkIdInRange(id: number, range: Range) : boolean {
     return (id >= range.start && id <= range.end);
 }
 
-//From https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
-function getParameterByName(name, url) {
+/**
+ * Gets a random integer between two given integers.
+ * @param min Inclusive minimum.
+ * @param max Exclusive maximum.
+ */
+function getRandomInt(min: number, max: number) : number {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min;   
+}
+
+/**
+ * Shuffle an array using the Fisher-Yates algorithm.
+ * From https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+ * @param array
+ */
+function shuffle(array: any[]) : any[] {
+    let currentIndex = array.length, temporaryValue, randomIndex;
+  
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+  
+        // Pick a remaining element...
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+    
+        // And swap it with the current element.
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+  
+    return array;
+}
+
+/**
+ * Get a URL parameter by name.
+ * From https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+ */
+function getParameterByName(name: string, url: string) : string {
     if (!url) url = window.location.href;
     name = name.replace(/[[\]]/g, "\\$&");
     var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
