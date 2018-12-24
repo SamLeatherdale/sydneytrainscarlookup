@@ -4,7 +4,7 @@ const tfnswData: TfNSWData = require('./data/data.json');
 const WIKIPEDIA_URL = "//en.wikipedia.org/wiki/";
 const TFNSW_ARTICLE_URL = "//transportnsw.info/travel-info/ways-to-get-around/train/fleet-facilities/";
 //const TFNSW_IMAGE_URL = "//transportnsw.info/sites/default/files/styles/wysiwyg_large_1140/public/image/2018/04/";
-const TFNSW_IMAGE_URL = "/images/";
+const TFNSW_IMAGE_URL = "images/";
 const idRegex = /^([A-Z]{0,3})?([0-9]{4})?$/;
 
 class SearchResult {
