@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/sydneytrainscarlookup/precache-manifest.1367e4112148d06917fcf02d43dd9a84.js"
+  "/sydneytrainscarlookup/precache-manifest.0eb910d95babe9f7d12e79d13568fe46.js"
 );
 
 workbox.clientsClaim();
