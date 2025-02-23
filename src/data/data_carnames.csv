@@ -6,6 +6,12 @@ OD,Driving trailer
 ON,Non-control motor
 ONL,Non-control motor + lavatory
 C,Control motor
+DD,Driving trailer
+DNL,Non-driving motor (lavatory)
+DT,Non-driving trailer
+DN,Non-driving motor
+DND,Non-driving motor (luggage rack)
+DDA,Driving trailer (ATP)
 DCF,Control motor
 DDC,Control motor
 DTF,Trailer
