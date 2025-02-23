@@ -1,5 +1,5 @@
 import React, { Component, FormEvent, FormEventHandler, ChangeEventHandler, ChangeEvent } from 'react';
-const tfnswData: TfNSWData = require('./data/data.json');
+import tfnswData from "./data/data.json";
 
 const WIKIPEDIA_URL = "//en.wikipedia.org/wiki/";
 const TFNSW_ARTICLE_URL = "//transportnsw.info/travel-info/ways-to-get-around/train/fleet-facilities/";
@@ -92,9 +92,6 @@ export default class App extends Component<{}, AppState> {
         this.onFormSubmit = this.onFormSubmit.bind(this);
         this.onFormReset = this.onFormReset.bind(this);
         this.onClickSuggestion = this.onClickSuggestion.bind(this);
-    }
-
-    componentWillMount() {
     }
 
     onChangeCarId(e: ChangeEvent) {
