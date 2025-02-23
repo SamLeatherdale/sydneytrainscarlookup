@@ -152,7 +152,6 @@ export default class App extends Component<{}, AppState> {
         const result = new SearchResult();
 
         if (match === null) {
-            //showAlert("Oops! That ID doesn't follow a valid format (eg. D1023)");
             return null;
         }
 
@@ -160,10 +159,6 @@ export default class App extends Component<{}, AppState> {
         result.queryNumber = parseInt(match[2]);
         const carLetterData = this.data.ranges[result.queryLetter];
 
-        // if (typeof carLetterData === "undefined") {
-        //     showAlert("Sorry! We couldn't find a Sydney Trains car for that ID");
-        //     return false;
-        // }
         if (typeof carLetterData !== "undefined") {
             //Just look through this letter
             for (let range of carLetterData) {
